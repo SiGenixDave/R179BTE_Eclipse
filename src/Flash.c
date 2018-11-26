@@ -33,7 +33,7 @@ static UINT_16 m_FlashReadValue;
 static UINT_16 debugBaseArray[100];
 static UINT_16 *m_BaseAddress = debugBaseArray;
 #else
-
+static UINT_16 *m_BaseAddress = (UINT_16 *)0x120000;
 #endif
 
 
@@ -49,19 +49,26 @@ void FlashService (void)
     }
 }
 
-void FlashTableUpdate(UINT_16 tableIndex, BOOLEAN readEnable, BOOLEAN writeEnable)
+BOOLEAN FlashTableUpdate(UINT_16 tableIndex, BOOLEAN readEnable, BOOLEAN writeEnable)
 {
+    BOOLEAN valid = FALSE;
+
     if (tableIndex < TABLE_SIZE)
     {
         m_Table[tableIndex].readEnable = readEnable;
+        valid = TRUE;
     }
+
+    return (valid);
 }
 
-void FlashTableUpdateAll(BOOLEAN readEnable, BOOLEAN writeEnable)
+BOOLEAN FlashTableUpdateAll(BOOLEAN readEnable, BOOLEAN writeEnable)
 {
     UINT_16 index;
     for (index = 0; index < TABLE_SIZE; index++)
     {
         m_Table[index].readEnable = readEnable;
     }
+
+    return (TRUE);
 }

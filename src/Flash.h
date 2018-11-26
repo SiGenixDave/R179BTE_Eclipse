@@ -11,7 +11,7 @@
 #include "Types.h"
 
 void FlashService (void);
-void FlashTableUpdate(UINT_16 tableIndex, BOOLEAN readEnable, BOOLEAN writeEnable);
-void FlashTableUpdateAll(BOOLEAN readEnable, BOOLEAN writeEnable);
+BOOLEAN FlashTableUpdate(UINT_16 tableIndex, BOOLEAN readEnable, BOOLEAN writeEnable);
+BOOLEAN FlashTableUpdateAll(BOOLEAN readEnable, BOOLEAN writeEnable);
 
 #endif /* FLASH_H_ */

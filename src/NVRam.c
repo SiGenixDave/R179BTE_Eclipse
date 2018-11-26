@@ -1,5 +1,5 @@
 /*
- * Ram.c
+ * NVRam.c
  *
  *  Created on: Nov 21, 2018
  *      Author: David Smail
@@ -36,11 +36,11 @@ static UINT_16 m_ReadValue;
 static UINT_16 debugBaseArray[100];
 static UINT_16 *m_BaseAddress = debugBaseArray;
 #else
-static UINT_16 *m_BaseAddress = (UINT_16 *)0x210000;
+static UINT_16 *m_BaseAddress = (UINT_16 *)0x810000;
 #endif
 
 
-void RamService (void)
+void NVRamService (void)
 {
     UINT_16 tableIndex;
     for (tableIndex = 0; tableIndex < TABLE_SIZE; tableIndex++)
@@ -56,7 +56,7 @@ void RamService (void)
     }
 }
 
-BOOLEAN RamTableUpdate(UINT_16 tableIndex, BOOLEAN readEnable, BOOLEAN writeEnable)
+BOOLEAN NVRamTableUpdate(UINT_16 tableIndex, BOOLEAN readEnable, BOOLEAN writeEnable)
 {
     BOOLEAN valid = FALSE;
 
@@ -72,7 +72,7 @@ BOOLEAN RamTableUpdate(UINT_16 tableIndex, BOOLEAN readEnable, BOOLEAN writeEnab
 }
 
 
-BOOLEAN RamTableUpdateAll(BOOLEAN readEnable, BOOLEAN writeEnable)
+BOOLEAN NVRamTableUpdateAll(BOOLEAN readEnable, BOOLEAN writeEnable)
 {
     UINT_16 tableIndex;
     for (tableIndex = 0; tableIndex < TABLE_SIZE; tableIndex++)

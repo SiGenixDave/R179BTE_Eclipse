@@ -3,7 +3,11 @@
 #include <stdlib.h>
 
 #include "Types.h"
+#include "SerComm.h"
 #include "Flash.h"
+#include "Ram.h"
+#include "NVRam.h"
+#include "RTC.h"
 
 typedef enum
 {
@@ -23,8 +27,8 @@ typedef enum
 } DeviceType;
 
 
-typedef void (*TableUpdate)(UINT_16 tableIndex, BOOLEAN readEnable, BOOLEAN writeEnable);
-typedef void (*TableUpdateAll)(BOOLEAN readEnable, BOOLEAN writeEnable);
+typedef BOOLEAN (*TableUpdate)(UINT_16 tableIndex, BOOLEAN readEnable, BOOLEAN writeEnable);
+typedef BOOLEAN (*TableUpdateAll)(BOOLEAN readEnable, BOOLEAN writeEnable);
 
 typedef struct
 {
@@ -36,7 +40,10 @@ typedef struct
 
 const CmdUpdate m_CmdUpdate[] =
 {
-   {FLASH, "FL", FlashTableUpdate, FlashTableUpdateAll},
+   {FLASH, "FL", FlashTableUpdate, FlashTableUpdateAll },
+   {RAM,   "RA", RamTableUpdate,   RamTableUpdateAll   },
+   {NVRAM, "NV", NVRamTableUpdate, NVRamTableUpdateAll },
+   {RTC,   "RT", RTCTableUpdate,   RTCTableUpdateAll   },
 };
 
 
@@ -47,7 +54,10 @@ UINT_16 m_CmdIndex;
 static const UINT_16 CMD_SIZE = 8;
 static const UINT_16 NUM_MEMORY_DEVICES = sizeof(m_CmdUpdate)/sizeof(CmdUpdate);
 
+static const char *SOFTWARE_VERSION = "0.0";
 
+
+static void SendCommandResponse(BOOLEAN validCmdReceived);
 static void ParseValidCommand(void);
 
 void ResetStateMachine(void)
@@ -59,7 +69,7 @@ void ResetStateMachine(void)
 
 void ProcessSerialInputChar (char ch)
 {
-    /* TODO putchar(ch); */
+    SC_PutChar(ch);
 
     switch (m_SerInState)
     {
@@ -73,7 +83,7 @@ void ProcessSerialInputChar (char ch)
             {
                 m_CmdIndex = 0;
                 ResetStateMachine();
-                /* TODO Send Invalid command */
+                SendCommandResponse(FALSE);
             }
             break;
 
@@ -92,7 +102,7 @@ void ProcessSerialInputChar (char ch)
             }
             else
             {
-                /* TODO Send Invalid command */
+                SendCommandResponse(FALSE);
             }
             ResetStateMachine();
             break;
@@ -101,11 +111,32 @@ void ProcessSerialInputChar (char ch)
 
 }
 
+static void SendCommandResponse(BOOLEAN validCmdReceived)
+{
+    char response[10];
+
+    if (validCmdReceived)
+    {
+        strcpy(response, "<OK");
+    }
+    else
+    {
+        strcpy(response, "<INV");
+    }
+    strcat(response, SOFTWARE_VERSION);
+    strcat(response, ">");
+
+    SC_Puts(response);
+}
+
+
+
 static void ParseValidCommand(void)
 {
     UINT_16 offset = 0xFFFF;
     BOOLEAN readEnable = TRUE;
     BOOLEAN writeEnable = TRUE;
+    BOOLEAN valid;
 
     /* Get the on board device to change behavior */
     UINT_16 index;
@@ -119,7 +150,7 @@ static void ParseValidCommand(void)
 
     if (index >= NUM_MEMORY_DEVICES)
     {
-        /* TODO Valid device not found... abort */
+        SendCommandResponse(FALSE);
         return;
     }
 
@@ -142,7 +173,8 @@ static void ParseValidCommand(void)
     }
     else
     {
-        /* TODO return invalid command */
+        SendCommandResponse(FALSE);
+        return;
     }
 
     if (m_CmdString[6] == 'W')
@@ -151,17 +183,20 @@ static void ParseValidCommand(void)
     }
     else
     {
-        /* TODO return invalid command */
+        SendCommandResponse(FALSE);
+        return;
     }
 
     if (offset == 0xFFFF)
     {
-        m_CmdUpdate[index].tableUpdateAllFn(readEnable, writeEnable);
+        valid = m_CmdUpdate[index].tableUpdateAllFn(readEnable, writeEnable);
     }
     else
     {
-        m_CmdUpdate[index].tableUpdateFn(offset, readEnable, writeEnable);
+        valid = m_CmdUpdate[index].tableUpdateFn(offset, readEnable, writeEnable);
     }
+
+    SendCommandResponse(valid);
 
 
 }
