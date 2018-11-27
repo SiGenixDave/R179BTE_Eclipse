@@ -12,7 +12,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "types.h"
 #include "CmdProc.h"
+#include "Flash.h"
 
 void TestCmdProc(void)
 {
@@ -29,6 +31,9 @@ void TestCmdProc(void)
 
 int main(void) {
 
+    INT_32 expVal;
+    INT_32 actVal;
+
 #ifdef WIN32
     /*********************************/
     // Used exclusively for winsock
@@ -41,11 +46,14 @@ int main(void) {
     /**********************************/
 #endif
 
-	puts("!!!Hello World!!!"); /* prints !!!Hello World!!! */
-	printf("printf Hellow World\n");
-
 	ResetStateMachine();
 	TestCmdProc();
+
+	if (!FlashService(&expVal, &actVal))
+	{
+
+	}
+
 
 	return (EXIT_SUCCESS);
 }
