@@ -10,9 +10,8 @@
 
 #include "Types.h"
 
-void RTCService (void);
-BOOLEAN RTCTableUpdate(UINT_16 tableIndex, BOOLEAN readEnable, BOOLEAN writeEnable);
-BOOLEAN RTCTableUpdateAll(BOOLEAN readEnable, BOOLEAN writeEnable);
+void RTCService (const char *str);
+BOOLEAN RTCTableUpdate(char cmdPtr[][MAX_PARAM_LENGTH]);
 
 
 #endif /* RTC_H_ */

@@ -5,80 +5,86 @@
  *      Author: David Smail
  */
 #include "Types.h"
+#include "CmdProc.h"
 
 typedef struct
 {
     const UINT_16 addrOffset;
-    const UINT_8 value;
-    BOOLEAN readEnable;
-    BOOLEAN writeEnable;
+    const UINT_8 data;
+    BOOLEAN enable;
 } UpdateTable;
 
 static UpdateTable m_Table[] =
 {
- { 0x00, 0x00, TRUE, TRUE },  { 0x00, 0x01, TRUE, TRUE },  { 0x00, 0x02, TRUE, TRUE },  { 0x00, 0x04, TRUE, TRUE },
- { 0x00, 0x08, TRUE, TRUE },  { 0x00, 0x10, TRUE, TRUE },  { 0x00, 0x20, TRUE, TRUE },  { 0x00, 0x40, TRUE, TRUE },
- { 0x00, 0x80, TRUE, TRUE },  { 0x00, 0xFF, TRUE, TRUE },  { 0x00, 0xFE, TRUE, TRUE },  { 0x00, 0xFD, TRUE, TRUE },
- { 0x00, 0xFB, TRUE, TRUE },  { 0x00, 0xF7, TRUE, TRUE },  { 0x00, 0xEF, TRUE, TRUE },  { 0x00, 0xDF, TRUE, TRUE },
- { 0x00, 0xBF, TRUE, TRUE },  { 0x00, 0x7F, TRUE, TRUE },
+ { 0x00, 0x00, FALSE },  { 0x00, 0x01, FALSE },  { 0x00, 0x02, FALSE },  { 0x00, 0x04, FALSE },
+ { 0x00, 0x08, FALSE },  { 0x00, 0x10, FALSE },  { 0x00, 0x20, FALSE },  { 0x00, 0x40, FALSE },
+ { 0x00, 0x80, FALSE },  { 0x00, 0xFF, FALSE },  { 0x00, 0xFE, FALSE },  { 0x00, 0xFD, FALSE },
+ { 0x00, 0xFB, FALSE },  { 0x00, 0xF7, FALSE },  { 0x00, 0xEF, FALSE },  { 0x00, 0xDF, FALSE },
+ { 0x00, 0xBF, FALSE },  { 0x00, 0x7F, FALSE },
 
 };
 
 static const UINT_16 TABLE_SIZE = sizeof(m_Table)/sizeof(UpdateTable);
-static UINT_16 m_ReadValue;
 
+void RTCService (const char *str)
+{
 
 #ifdef _WIN32
-static UINT_8 debugBaseArray[100];
-static UINT_8 *m_BaseAddress = debugBaseArray;
+    UINT_8 debugBaseArray[100];
+    UINT_8 *baseAddress = debugBaseArray;
 #else
-static UINT_8 *m_BaseAddress = (UINT_16 *)0x301000;
+    UINT_8 *baseAddress = (UINT_8 *)0x301000;
 #endif
 
+    UINT_8 actualValue;
+    UINT_8 expectedValue;
+    UINT_16 index;
 
-void RTCService (void)
-{
-    UINT_16 tableIndex;
-    for (tableIndex = 0; tableIndex < TABLE_SIZE; tableIndex++)
+    for (index = 0; index < TABLE_SIZE; index++)
     {
-        if (m_Table[tableIndex].writeEnable)
+        if (m_Table[index].enable)
         {
-            m_BaseAddress[m_Table[tableIndex].addrOffset] = m_Table[tableIndex].value;
-        }
-        if (m_Table[tableIndex].readEnable)
-        {
-            m_ReadValue = m_BaseAddress[m_Table[tableIndex].addrOffset];
+            m_Table[index].enable = FALSE;
+            expectedValue = m_Table[index].data;
+            baseAddress[m_Table[index].addrOffset] = expectedValue;
+            actualValue = baseAddress[m_Table[index].addrOffset];
+            if (actualValue != expectedValue)
+            {
+                SendMismatchError (str, expectedValue, actualValue, BIT_WIDTH_8);
+            }
+            else
+            {
+                SendTestPassed (str, expectedValue, BIT_WIDTH_8);
+            }
         }
     }
+
 }
 
-BOOLEAN RTCTableUpdate(UINT_16 tableIndex, BOOLEAN readEnable, BOOLEAN writeEnable)
+BOOLEAN RTCTableUpdate(char cmdPtr[][MAX_PARAM_LENGTH])
 {
     BOOLEAN valid = FALSE;
+    UINT_32 tableIndex;
 
-    if (tableIndex < TABLE_SIZE)
+    if (!HexStringToValue (cmdPtr[1], &tableIndex))
     {
-        m_Table[tableIndex].readEnable = readEnable;
-        m_Table[tableIndex].writeEnable = writeEnable;
+        return (FALSE);
+    }
+
+    if (tableIndex == 0x00FF)
+    {
+        UINT_16 index;
+        for (index = 0; index < TABLE_SIZE; index++)
+        {
+            m_Table[index].enable = TRUE;
+        }
         valid = TRUE;
     }
-
-    return (valid);
-
-}
-
-
-BOOLEAN RTCTableUpdateAll(BOOLEAN readEnable, BOOLEAN writeEnable)
-{
-    UINT_16 tableIndex;
-
-    for (tableIndex = 0; tableIndex < TABLE_SIZE; tableIndex++)
+    else if (tableIndex < TABLE_SIZE)
     {
-        m_Table[tableIndex].readEnable = readEnable;
-        m_Table[tableIndex].writeEnable = writeEnable;
+        m_Table[tableIndex].enable = TRUE;
+        valid = TRUE;
     }
-
-    return (TRUE);
+    return (valid);
 }
-
 

@@ -12,48 +12,35 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "types.h"
+#include "Types.h"
 #include "CmdProc.h"
 #include "Flash.h"
+#include "SerComm.h"
 
-void TestCmdProc(void)
+
+int main (void)
 {
-    char str[] = "<FL1aR-W+>";
-    int index = 0;
-
-    while (index < strlen(str))
-    {
-        ProcessSerialInputChar(str[index]);
-        index++;
-    }
-
-}
-
-int main(void) {
-
-    INT_32 expVal;
-    INT_32 actVal;
 
 #ifdef WIN32
     /*********************************/
     // Used exclusively for winsock
-    setvbuf(stdout, NULL, _IONBF, 0);
-    setvbuf(stderr, NULL, _IONBF, 0);
-    #ifdef _DEBUG
+    setvbuf (stdout, NULL, _IONBF, 0);
+    setvbuf (stderr, NULL, _IONBF, 0);
+#ifdef _DEBUG
     setbuf(stdout,NULL); // this disables buffering for stdout.
-    #endif
+#endif
 
     /**********************************/
 #endif
 
-	ResetStateMachine();
-	TestCmdProc();
+    SC_Init();
+    ResetStateMachine ();
 
-	if (!FlashService(&expVal, &actVal))
-	{
+    while (TRUE)
+    {
+        SC_Service();
+        ApplicationService ();
+    }
 
-	}
-
-
-	return (EXIT_SUCCESS);
+    return (EXIT_SUCCESS);
 }

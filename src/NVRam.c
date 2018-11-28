@@ -4,82 +4,117 @@
  *  Created on: Nov 21, 2018
  *      Author: David Smail
  */
+
 #include "Types.h"
+#include "CmdProc.h"
 
 typedef struct
 {
     const UINT_16 addrOffset;
-    const UINT_16 value;
-    BOOLEAN readEnable;
-    BOOLEAN writeEnable;
+    const UINT_16 data;
+    BOOLEAN enable;
 } UpdateTable;
 
 static UpdateTable m_Table[] =
+    {
+        { 0x00, 0x0000, FALSE },
+          { 0x00, 0x0001, FALSE },
+          { 0x00, 0x0002, FALSE },
+          { 0x00, 0x0004, FALSE },
+          { 0x00, 0x0008, FALSE },
+          { 0x00, 0x0010, FALSE },
+          { 0x00, 0x0020, FALSE },
+          { 0x00, 0x0040, FALSE },
+          { 0x00, 0x0080, FALSE },
+          { 0x00, 0x0100, FALSE },
+          { 0x00, 0x0200, FALSE },
+          { 0x00, 0x0400, FALSE },
+          { 0x00, 0x0800, FALSE },
+          { 0x00, 0x1000, FALSE },
+          { 0x00, 0x2000, FALSE },
+          { 0x00, 0x4000, FALSE },
+          { 0x00, 0x8000, FALSE },
+          { 0x00, 0xFFFF, FALSE },
+          { 0x00, 0xFFFE, FALSE },
+          { 0x00, 0xFFFD, FALSE },
+          { 0x00, 0xFFFB, FALSE },
+          { 0x00, 0xFFF7, FALSE },
+          { 0x00, 0xFFEF, FALSE },
+          { 0x00, 0xFFDF, FALSE },
+          { 0x00, 0xFFBF, FALSE },
+          { 0x00, 0xFF7F, FALSE },
+          { 0x00, 0xFEFF, FALSE },
+          { 0x00, 0xFDFF, FALSE },
+          { 0x00, 0xFBFF, FALSE },
+          { 0x00, 0xF7FF, FALSE },
+          { 0x00, 0xEFFF, FALSE },
+          { 0x00, 0xDFFF, FALSE },
+          { 0x00, 0xBFFF, FALSE },
+          { 0x00, 0x7FFF, FALSE },
+
+    };
+
+static const UINT_16 TABLE_SIZE = sizeof(m_Table) / sizeof(UpdateTable);
+
+void NVRamService (const char *str)
 {
- { 0x00, 0x0000, TRUE, TRUE },  { 0x00, 0x0001, TRUE, TRUE },  { 0x00, 0x0002, TRUE, TRUE },  { 0x00, 0x0004, TRUE, TRUE },
- { 0x00, 0x0008, TRUE, TRUE },  { 0x00, 0x0010, TRUE, TRUE },  { 0x00, 0x0020, TRUE, TRUE },  { 0x00, 0x0040, TRUE, TRUE },
- { 0x00, 0x0080, TRUE, TRUE },  { 0x00, 0x0100, TRUE, TRUE },  { 0x00, 0x0200, TRUE, TRUE },  { 0x00, 0x0400, TRUE, TRUE },
- { 0x00, 0x0800, TRUE, TRUE },  { 0x00, 0x1000, TRUE, TRUE },  { 0x00, 0x2000, TRUE, TRUE },  { 0x00, 0x4000, TRUE, TRUE },
- { 0x00, 0x8000, TRUE, TRUE },  { 0x00, 0xFFFF, TRUE, TRUE },  { 0x00, 0xFFFE, TRUE, TRUE },  { 0x00, 0xFFFD, TRUE, TRUE },
- { 0x00, 0xFFFB, TRUE, TRUE },  { 0x00, 0xFFF7, TRUE, TRUE },  { 0x00, 0xFFEF, TRUE, TRUE },  { 0x00, 0xFFDF, TRUE, TRUE },
- { 0x00, 0xFFBF, TRUE, TRUE },  { 0x00, 0xFF7F, TRUE, TRUE },  { 0x00, 0xFEFF, TRUE, TRUE },  { 0x00, 0xFDFF, TRUE, TRUE },
- { 0x00, 0xFBFF, TRUE, TRUE },  { 0x00, 0xF7FF, TRUE, TRUE },  { 0x00, 0xEFFF, TRUE, TRUE },  { 0x00, 0xDFFF, TRUE, TRUE },
- { 0x00, 0xBFFF, TRUE, TRUE },  { 0x00, 0x7FFF, TRUE, TRUE },
-
-};
-
-static const UINT_16 TABLE_SIZE = sizeof(m_Table)/sizeof(UpdateTable);
-static UINT_16 m_ReadValue;
-
 
 #ifdef _WIN32
-static UINT_16 debugBaseArray[100];
-static UINT_16 *m_BaseAddress = debugBaseArray;
+    UINT_16 debugBaseArray[100];
+    UINT_16 *baseAddress = debugBaseArray;
 #else
-static UINT_16 *m_BaseAddress = (UINT_16 *)0x810000;
+    UINT_16 *baseAddress = (UINT_16 *)0x810000;
 #endif
 
+    UINT_16 actualValue;
+    UINT_16 expectedValue;
+    UINT_16 index;
 
-void NVRamService (void)
-{
-    UINT_16 tableIndex;
-    for (tableIndex = 0; tableIndex < TABLE_SIZE; tableIndex++)
+    for (index = 0; index < TABLE_SIZE; index++)
     {
-        if (m_Table[tableIndex].writeEnable)
+        if (m_Table[index].enable)
         {
-            m_BaseAddress[m_Table[tableIndex].addrOffset] = m_Table[tableIndex].value;
-        }
-        if (m_Table[tableIndex].readEnable)
-        {
-            m_ReadValue = m_BaseAddress[m_Table[tableIndex].addrOffset];
+            m_Table[index].enable = FALSE;
+            expectedValue = m_Table[index].data;
+            baseAddress[m_Table[index].addrOffset] = expectedValue;
+            actualValue = baseAddress[m_Table[index].addrOffset];
+            if (actualValue != expectedValue)
+            {
+                SendMismatchError (str, expectedValue, actualValue, BIT_WIDTH_8);
+            }
+            else
+            {
+                SendTestPassed (str, expectedValue, BIT_WIDTH_8);
+            }
         }
     }
+
 }
 
-BOOLEAN NVRamTableUpdate(UINT_16 tableIndex, BOOLEAN readEnable, BOOLEAN writeEnable)
+BOOLEAN NVRamTableUpdate(char cmdPtr[][MAX_PARAM_LENGTH])
 {
     BOOLEAN valid = FALSE;
+    UINT_32 tableIndex;
 
-    if (tableIndex < TABLE_SIZE)
+    if (!HexStringToValue (cmdPtr[1], &tableIndex))
     {
-        m_Table[tableIndex].readEnable = readEnable;
-        m_Table[tableIndex].writeEnable = writeEnable;
+        return (FALSE);
+    }
+
+    if (tableIndex == 0x00FF)
+    {
+        UINT_16 index;
+        for (index = 0; index < TABLE_SIZE; index++)
+        {
+            m_Table[index].enable = TRUE;
+        }
         valid = TRUE;
     }
-
-    return (valid);
-
-}
-
-
-BOOLEAN NVRamTableUpdateAll(BOOLEAN readEnable, BOOLEAN writeEnable)
-{
-    UINT_16 tableIndex;
-    for (tableIndex = 0; tableIndex < TABLE_SIZE; tableIndex++)
+    else if (tableIndex < TABLE_SIZE)
     {
-        m_Table[tableIndex].readEnable = readEnable;
-        m_Table[tableIndex].writeEnable = writeEnable;
+        m_Table[tableIndex].enable = TRUE;
+        valid = TRUE;
     }
-
-    return (TRUE);
+    return (valid);
 }
+

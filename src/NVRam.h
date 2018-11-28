@@ -10,8 +10,7 @@
 
 #include "Types.h"
 
-void NVRamService (void);
-BOOLEAN NVRamTableUpdate(UINT_16 tableIndex, BOOLEAN readEnable, BOOLEAN writeEnable);
-BOOLEAN NVRamTableUpdateAll(BOOLEAN readEnable, BOOLEAN writeEnable);
+void NVRamService (const char *str);
+BOOLEAN NVRamTableUpdate(char cmdPtr[][MAX_PARAM_LENGTH]);
 
 #endif /* NVRAM_H_ */

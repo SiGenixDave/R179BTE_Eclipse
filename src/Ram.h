@@ -10,8 +10,7 @@
 
 #include "Types.h"
 
-void RamService (void);
-BOOLEAN RamTableUpdate(UINT_16 tableIndex, BOOLEAN readEnable, BOOLEAN writeEnable);
-BOOLEAN RamTableUpdateAll(BOOLEAN readEnable, BOOLEAN writeEnable);
+void RamService (const char *str);
+BOOLEAN RamTableUpdate(char cmdPtr[][MAX_PARAM_LENGTH]);
 
 #endif /* RAM_H_ */

@@ -8,7 +8,9 @@
 #ifndef SERCOMM_H_
 #define SERCOMM_H_
 
-void SC_PutChar(char c);
-void SC_Puts(char *str);
+void SC_Service (void);
+void SC_Init (void);
+void SC_PutChar (char c);
+void SC_Puts (char *str);
 
 #endif /* SERCOMM_H_ */

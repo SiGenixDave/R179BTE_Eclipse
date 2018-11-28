@@ -1,75 +1,98 @@
+#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <limits.h>
 
 #include "Types.h"
+#include "CmdProc.h"
 #include "SerComm.h"
 #include "Flash.h"
 #include "Ram.h"
 #include "NVRam.h"
 #include "RTC.h"
 
+#define MAX_PARAMS          5
+#define MAX_CMD_SIZE        55
+
 typedef enum
 {
-    WAIT_FOR_OPEN_BRACE,
-    WAIT_FOR_ENTIRE_CMD,
-    WAIT_FOR_CLOSE_BRACE,
-
+    WAIT_FOR_OPEN_BRACE, WAIT_FOR_ENTIRE_CMD,
 } SerialInputState;
 
-typedef enum
-{
-    FLASH,
-    RAM,
-    NVRAM,
-    RTC
 
-} DeviceType;
-
-
-typedef BOOLEAN (*TableUpdate)(UINT_16 tableIndex, BOOLEAN readEnable, BOOLEAN writeEnable);
-typedef BOOLEAN (*TableUpdateAll)(BOOLEAN readEnable, BOOLEAN writeEnable);
+typedef BOOLEAN (*CmdUpdateFnPtr) (char cmdPtr[][MAX_PARAM_LENGTH]);
+typedef void (*ServiceFnPtr) (const char *str);
 
 typedef struct
 {
-    DeviceType device;
     const char *str;
-    TableUpdate tableUpdateFn;
-    TableUpdateAll tableUpdateAllFn;
+    CmdUpdateFnPtr cmdUpdateFnPtr;
+    ServiceFnPtr serviceFnPtr;
 } CmdUpdate;
 
 const CmdUpdate m_CmdUpdate[] =
-{
-   {FLASH, "FL", FlashTableUpdate, FlashTableUpdateAll },
-   {RAM,   "RA", RamTableUpdate,   RamTableUpdateAll   },
-   {NVRAM, "NV", NVRamTableUpdate, NVRamTableUpdateAll },
-   {RTC,   "RT", RTCTableUpdate,   RTCTableUpdateAll   },
-};
-
+    {
+        { "FLA", FlashTableUpdate, FlashService  },
+          { "RAM", RamTableUpdate, RamService  },
+          { "NVR", NVRamTableUpdate, NVRamService  },
+          { "RTC", RTCTableUpdate, RTCService  }, };
 
 SerialInputState m_SerInState;
-char m_CmdString[10];
 UINT_16 m_CmdIndex;
 
-static const UINT_16 CMD_SIZE = 8;
-static const UINT_16 NUM_MEMORY_DEVICES = sizeof(m_CmdUpdate)/sizeof(CmdUpdate);
-
 static const char *SOFTWARE_VERSION = "0.0";
+static const UINT_16 NUM_VALID_COMMANDS = sizeof(m_CmdUpdate) / sizeof(CmdUpdate);
 
+static char m_CmdString[MAX_CMD_SIZE];
+static BOOLEAN m_ContinuousPeekOrPokeEnabled = FALSE;
 
-static void SendCommandResponse(BOOLEAN validCmdReceived);
-static void ParseValidCommand(void);
+static void SendCommandResponse (BOOLEAN validCmdReceived);
+static void ParseValidCommand (void);
 
-void ResetStateMachine(void)
+void ApplicationService (void)
+{
+    if (!m_ContinuousPeekOrPokeEnabled)
+    {
+        UINT_16 index;
+        for (index = 0; index < NUM_VALID_COMMANDS; index++)
+        {
+            m_CmdUpdate[index].serviceFnPtr (m_CmdUpdate[index].str);
+        }
+    }
+
+}
+
+BOOLEAN HexStringToValue (char *ptr, UINT_32 *value)
+{
+    /* Error detection info received from:
+     * https://stackoverflow.com/questions/26080829/detecting-strtol-failure */
+
+    UINT_32 number = 0;
+    char *endptr = NULL;
+    number = (UINT_32) strtol (ptr, &endptr, 16);
+
+    if ((ptr == endptr) || (errno == ERANGE && number == LONG_MIN) || (errno == ERANGE && number == LONG_MAX)
+                    || (errno == EINVAL) || (errno != 0 && number == 0))
+    {
+        return (FALSE);
+    }
+
+    *value = number;
+    return (TRUE);
+}
+
+void ResetStateMachine (void)
 {
     m_SerInState = WAIT_FOR_OPEN_BRACE;
     m_CmdIndex = 0;
-    memset(m_CmdString, 0, sizeof(m_CmdString));
+    memset (m_CmdString, 0, sizeof(m_CmdString));
 }
 
 void ProcessSerialInputChar (char ch)
 {
-    SC_PutChar(ch);
+    SC_PutChar (ch);
 
     switch (m_SerInState)
     {
@@ -82,121 +105,172 @@ void ProcessSerialInputChar (char ch)
             else
             {
                 m_CmdIndex = 0;
-                ResetStateMachine();
-                SendCommandResponse(FALSE);
+                ResetStateMachine ();
+                SendCommandResponse (FALSE);
             }
             break;
 
         case WAIT_FOR_ENTIRE_CMD:
-            m_CmdString[m_CmdIndex++] = toupper(ch);
-            if (m_CmdIndex >= CMD_SIZE)
+            if (m_CmdIndex >= MAX_CMD_SIZE)
             {
-                m_SerInState = WAIT_FOR_CLOSE_BRACE;
+                SendCommandResponse (FALSE);
+                ResetStateMachine ();
             }
-            break;
-
-        case WAIT_FOR_CLOSE_BRACE:
-            if (ch == '>')
+            else if (ch == '>')
             {
-                ParseValidCommand();
+                m_CmdString[m_CmdIndex] = '\0';
+                ParseValidCommand ();
+                ResetStateMachine ();
             }
             else
             {
-                SendCommandResponse(FALSE);
+                m_CmdString[m_CmdIndex] = toupper (ch);
+                m_CmdIndex++;
             }
-            ResetStateMachine();
             break;
 
     }
 
 }
 
-static void SendCommandResponse(BOOLEAN validCmdReceived)
+void SendTestPassed (const char *str, UINT_32 expectedValue, eDataWidth dataWidth)
+{
+    char response[50];
+    const char *formatSpecifier32 = "<%s,PASS,%08X>";
+    const char *formatSpecifier16 = "<%s,PASS,%04X>";
+    const char *formatSpecifier8 = "<%s,PASS,%02X>";
+    const char *formatSpecifier;
+
+    switch (dataWidth)
+    {
+        default:
+        case BIT_WIDTH_8:
+            formatSpecifier = formatSpecifier8;
+            break;
+        case BIT_WIDTH_16:
+            formatSpecifier = formatSpecifier16;
+            break;
+        case BIT_WIDTH_32:
+            formatSpecifier = formatSpecifier32;
+            break;
+    }
+
+    sprintf (response, formatSpecifier, str, expectedValue);
+
+    SC_Puts (response);
+}
+
+void SendMismatchError (const char *str, UINT_32 expectedValue, UINT_32 actualValue, eDataWidth dataWidth)
+{
+    char response[50];
+    const char *formatSpecifier32 = "<%s,FAIL,%08X,%08X>";
+    const char *formatSpecifier16 = "<%s,FAIL,%04X,%04X>";
+    const char *formatSpecifier8 = "<%s,FAIL,%02X,%02X>";
+    const char *formatSpecifier;
+
+    switch (dataWidth)
+    {
+        default:
+        case BIT_WIDTH_8:
+            formatSpecifier = formatSpecifier8;
+            break;
+        case BIT_WIDTH_16:
+            formatSpecifier = formatSpecifier16;
+            break;
+        case BIT_WIDTH_32:
+            formatSpecifier = formatSpecifier32;
+            break;
+    }
+
+    sprintf (response, formatSpecifier, str, expectedValue, actualValue);
+
+    SC_Puts (response);
+}
+
+
+
+static void SendCommandResponse (BOOLEAN validCmdReceived)
 {
     char response[10];
 
     if (validCmdReceived)
     {
-        strcpy(response, "<OK");
+        strcpy (response, "<OK,");
     }
     else
     {
-        strcpy(response, "<INV");
+        strcpy (response, "<INV,");
     }
-    strcat(response, SOFTWARE_VERSION);
-    strcat(response, ">");
+    strcat (response, SOFTWARE_VERSION);
+    strcat (response, ">");
 
-    SC_Puts(response);
+    SC_Puts (response);
 }
 
-
-
-static void ParseValidCommand(void)
+static void ParseValidCommand (void)
 {
-    UINT_16 offset = 0xFFFF;
-    BOOLEAN readEnable = TRUE;
-    BOOLEAN writeEnable = TRUE;
-    BOOLEAN valid;
+    BOOLEAN valid = FALSE;
+    ;
+
+    UINT_16 cmd = 0;
+    UINT_16 cmdIndex = 0;
+    UINT_16 index = 0;
+
+    static char parsedCommands[MAX_PARAMS][MAX_PARAM_LENGTH];
+
+    /* Save all of the command parameter info */
+    while (m_CmdString[index] != '\0')
+    {
+        if (m_CmdString[index] == ',')
+        {
+            parsedCommands[cmd][cmdIndex] = 0;
+            cmdIndex = 0;
+            cmd++;
+            if (cmd >= MAX_PARAMS)
+            {
+                /* TODO Issue invalid command; too many params */
+                return;
+            }
+        }
+        else
+        {
+            if (cmdIndex >= MAX_PARAM_LENGTH)
+            {
+                /* TODO Issue invalid command; param length too long */
+                return;
+            }
+            else
+            {
+                parsedCommands[cmd][cmdIndex] = m_CmdString[index];
+                cmdIndex++;
+            }
+        }
+        index++;
+    }
+
+    parsedCommands[cmd][cmdIndex] = '\0';
 
     /* Get the on board device to change behavior */
-    UINT_16 index;
-    for (index = 0; index < NUM_MEMORY_DEVICES; index++)
+    for (index = 0; index < NUM_VALID_COMMANDS; index++)
     {
-        if (!strncmp(&m_CmdString[0],  m_CmdUpdate[index].str, 2))
+        if (!strcmp (parsedCommands[0], m_CmdUpdate[index].str))
         {
             break;
         }
     }
 
-    if (index >= NUM_MEMORY_DEVICES)
+    if (index >= NUM_VALID_COMMANDS)
     {
-        SendCommandResponse(FALSE);
+        SendCommandResponse (FALSE);
         return;
     }
 
-    /* Get the offset */
-    if (!strncmp(&m_CmdString[2], "XX", 2))
-    {
-        /* All are requested */
-    }
-    else
-    {
-        char hexNumberStr[3];
-        strncpy(hexNumberStr, &m_CmdString[2], 2);
-        offset = strtol(hexNumberStr, NULL, 16);
-    }
+    valid = m_CmdUpdate[index].cmdUpdateFnPtr (&parsedCommands[0]);
 
-    /* Verify R and W are in the correct spots */
-    if (m_CmdString[4] == 'R')
-    {
-        readEnable = (m_CmdString[5] == '+');
-    }
-    else
-    {
-        SendCommandResponse(FALSE);
-        return;
-    }
-
-    if (m_CmdString[6] == 'W')
-    {
-        writeEnable = (m_CmdString[7] == '+');
-    }
-    else
-    {
-        SendCommandResponse(FALSE);
-        return;
-    }
-
-    if (offset == 0xFFFF)
-    {
-        valid = m_CmdUpdate[index].tableUpdateAllFn(readEnable, writeEnable);
-    }
-    else
-    {
-        valid = m_CmdUpdate[index].tableUpdateFn(offset, readEnable, writeEnable);
-    }
-
-    SendCommandResponse(valid);
-
+    SendCommandResponse (valid);
 
 }
+
+
+
+
