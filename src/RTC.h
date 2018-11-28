@@ -11,7 +11,6 @@
 #include "Types.h"
 
 void RTCService (const char *str);
-BOOLEAN RTCTableUpdate(char cmdPtr[][MAX_PARAM_LENGTH]);
-
+BOOLEAN RTCTableUpdate (char cmdPtr[][MAX_PARAM_LENGTH]);
 
 #endif /* RTC_H_ */

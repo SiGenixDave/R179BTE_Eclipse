@@ -15,16 +15,29 @@ typedef struct
 } UpdateTable;
 
 static UpdateTable m_Table[] =
-{
- { 0x00, 0x00, FALSE },  { 0x00, 0x01, FALSE },  { 0x00, 0x02, FALSE },  { 0x00, 0x04, FALSE },
- { 0x00, 0x08, FALSE },  { 0x00, 0x10, FALSE },  { 0x00, 0x20, FALSE },  { 0x00, 0x40, FALSE },
- { 0x00, 0x80, FALSE },  { 0x00, 0xFF, FALSE },  { 0x00, 0xFE, FALSE },  { 0x00, 0xFD, FALSE },
- { 0x00, 0xFB, FALSE },  { 0x00, 0xF7, FALSE },  { 0x00, 0xEF, FALSE },  { 0x00, 0xDF, FALSE },
- { 0x00, 0xBF, FALSE },  { 0x00, 0x7F, FALSE },
+    {
+        { 0x00, 0x00, FALSE },
+          { 0x00, 0x01, FALSE },
+          { 0x00, 0x02, FALSE },
+          { 0x00, 0x04, FALSE },
+          { 0x00, 0x08, FALSE },
+          { 0x00, 0x10, FALSE },
+          { 0x00, 0x20, FALSE },
+          { 0x00, 0x40, FALSE },
+          { 0x00, 0x80, FALSE },
+          { 0x00, 0xFF, FALSE },
+          { 0x00, 0xFE, FALSE },
+          { 0x00, 0xFD, FALSE },
+          { 0x00, 0xFB, FALSE },
+          { 0x00, 0xF7, FALSE },
+          { 0x00, 0xEF, FALSE },
+          { 0x00, 0xDF, FALSE },
+          { 0x00, 0xBF, FALSE },
+          { 0x00, 0x7F, FALSE },
 
-};
+    };
 
-static const UINT_16 TABLE_SIZE = sizeof(m_Table)/sizeof(UpdateTable);
+static const UINT_16 TABLE_SIZE = sizeof(m_Table) / sizeof(UpdateTable);
 
 void RTCService (const char *str)
 {
@@ -61,7 +74,7 @@ void RTCService (const char *str)
 
 }
 
-BOOLEAN RTCTableUpdate(char cmdPtr[][MAX_PARAM_LENGTH])
+BOOLEAN RTCTableUpdate (char cmdPtr[][MAX_PARAM_LENGTH])
 {
     BOOLEAN valid = FALSE;
     UINT_32 tableIndex;

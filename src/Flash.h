@@ -11,6 +11,6 @@
 #include "Types.h"
 
 void FlashService (const char *str);
-BOOLEAN FlashTableUpdate(char cmdPtr[][MAX_PARAM_LENGTH]);
+BOOLEAN FlashTableUpdate (char cmdPtr[][MAX_PARAM_LENGTH]);
 
 #endif /* FLASH_H_ */

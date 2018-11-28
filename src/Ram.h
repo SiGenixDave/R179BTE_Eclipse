@@ -11,6 +11,6 @@
 #include "Types.h"
 
 void RamService (const char *str);
-BOOLEAN RamTableUpdate(char cmdPtr[][MAX_PARAM_LENGTH]);
+BOOLEAN RamTableUpdate (char cmdPtr[][MAX_PARAM_LENGTH]);
 
 #endif /* RAM_H_ */

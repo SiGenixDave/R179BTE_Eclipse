@@ -11,6 +11,6 @@
 #include "Types.h"
 
 void NVRamService (const char *str);
-BOOLEAN NVRamTableUpdate(char cmdPtr[][MAX_PARAM_LENGTH]);
+BOOLEAN NVRamTableUpdate (char cmdPtr[][MAX_PARAM_LENGTH]);
 
 #endif /* NVRAM_H_ */

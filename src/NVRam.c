@@ -91,7 +91,7 @@ void NVRamService (const char *str)
 
 }
 
-BOOLEAN NVRamTableUpdate(char cmdPtr[][MAX_PARAM_LENGTH])
+BOOLEAN NVRamTableUpdate (char cmdPtr[][MAX_PARAM_LENGTH])
 {
     BOOLEAN valid = FALSE;
     UINT_32 tableIndex;

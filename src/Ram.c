@@ -89,7 +89,7 @@ void RamService (const char *str)
     }
 }
 
-BOOLEAN RamTableUpdate(char cmdPtr[][MAX_PARAM_LENGTH])
+BOOLEAN RamTableUpdate (char cmdPtr[][MAX_PARAM_LENGTH])
 {
     BOOLEAN valid = FALSE;
     UINT_32 tableIndex;

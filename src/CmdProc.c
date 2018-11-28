@@ -21,23 +21,22 @@ typedef enum
     WAIT_FOR_OPEN_BRACE, WAIT_FOR_ENTIRE_CMD,
 } SerialInputState;
 
-
 typedef BOOLEAN (*CmdUpdateFnPtr) (char cmdPtr[][MAX_PARAM_LENGTH]);
 typedef void (*ServiceFnPtr) (const char *str);
 
 typedef struct
 {
     const char *str;
-    CmdUpdateFnPtr cmdUpdateFnPtr;
-    ServiceFnPtr serviceFnPtr;
+    const CmdUpdateFnPtr cmdUpdateFnPtr;
+    const ServiceFnPtr serviceFnPtr;
 } CmdUpdate;
 
 const CmdUpdate m_CmdUpdate[] =
     {
-        { "FLA", FlashTableUpdate, FlashService  },
-          { "RAM", RamTableUpdate, RamService  },
-          { "NVR", NVRamTableUpdate, NVRamService  },
-          { "RTC", RTCTableUpdate, RTCService  }, };
+        { "FLA", FlashTableUpdate, FlashService },
+          { "RAM", RamTableUpdate, RamService },
+          { "NVR", NVRamTableUpdate, NVRamService },
+          { "RTC", RTCTableUpdate, RTCService }, };
 
 SerialInputState m_SerInState;
 UINT_16 m_CmdIndex;
@@ -61,7 +60,6 @@ void ApplicationService (void)
             m_CmdUpdate[index].serviceFnPtr (m_CmdUpdate[index].str);
         }
     }
-
 }
 
 BOOLEAN HexStringToValue (char *ptr, UINT_32 *value)
@@ -187,8 +185,6 @@ void SendMismatchError (const char *str, UINT_32 expectedValue, UINT_32 actualVa
     SC_Puts (response);
 }
 
-
-
 static void SendCommandResponse (BOOLEAN validCmdReceived)
 {
     char response[10];
@@ -210,7 +206,6 @@ static void SendCommandResponse (BOOLEAN validCmdReceived)
 static void ParseValidCommand (void)
 {
     BOOLEAN valid = FALSE;
-    ;
 
     UINT_16 cmd = 0;
     UINT_16 cmdIndex = 0;
@@ -270,7 +265,4 @@ static void ParseValidCommand (void)
     SendCommandResponse (valid);
 
 }
-
-
-
 
