@@ -36,7 +36,9 @@ const CmdUpdate m_CmdUpdate[] =
         { "FLA", FlashTableUpdate, FlashService },
           { "RAM", RamTableUpdate, RamService },
           { "NVR", NVRamTableUpdate, NVRamService },
-          { "RTC", RTCTableUpdate, RTCService }, };
+          { "RTC", RTCTableUpdate, RTCService },
+
+    };
 
 SerialInputState m_SerInState;
 UINT_16 m_CmdIndex;
