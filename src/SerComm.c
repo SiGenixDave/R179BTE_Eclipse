@@ -42,3 +42,8 @@ void SC_Puts(char *str)
     RS232_SendBuf (COM_ID, str, strlen(str));
 }
 
+void SC_PutsAlways(char *str)
+{
+    RS232_SendBuf (COM_ID, str, strlen(str));
+}
+

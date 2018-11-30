@@ -12,5 +12,6 @@ INT_16 SC_GetChar(void);
 void SC_Init (void);
 void SC_PutChar (char c);
 void SC_Puts (char *str);
+void SC_PutsAlways (char *str);
 
 #endif /* SERCOMM_H_ */
