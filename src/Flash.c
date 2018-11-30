@@ -57,10 +57,10 @@ void FlashService (const char *str)
 {
 
 #ifdef _WIN32
-    static UINT_16 debugBaseArray[100];
+    static UINT_16 debugBaseArray[] = {0x0000, 0x0001, 0x0002, 0x0004, 0x0008, 0x0100};
     static UINT_16 *baseAddress = debugBaseArray;
 #else
-    static UINT_16 *baseAddress = (UINT_16 *)0x120000;
+    static UINT_16 *baseAddress = (UINT_16 *)0x110000;
 #endif
 
     UINT_16 actualValue;

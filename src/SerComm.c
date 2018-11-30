@@ -12,16 +12,15 @@
 
 const int COM_ID = 5;  /* comport 6 */
 
-void SC_Service(void)
+INT_16 SC_GetChar(void)
 {
-    int n;
+    INT_16 n;
     unsigned char buf;
 
     n = RS232_PollComport(COM_ID, &buf, 1);
 
-    if (n > 0) {
-        ProcessSerialInputChar((char)buf);
-    }
+    if (n == 0) { return (EOF); }
+    else {return (buf);};
 }
 
 void SC_Init()

@@ -38,7 +38,6 @@ int main (void)
 
     while (TRUE)
     {
-        SC_Service();
         ApplicationService ();
     }
 

@@ -18,7 +18,7 @@
 
 typedef enum
 {
-    WAIT_FOR_OPEN_BRACE, WAIT_FOR_ENTIRE_CMD,
+    WAIT_FOR_OPEN_BRACE, WAIT_FOR_ENTIRE_CMD
 } SerialInputState;
 
 typedef BOOLEAN (*CmdUpdateFnPtr) (char cmdPtr[][MAX_PARAM_LENGTH]);
@@ -49,11 +49,22 @@ static const UINT_16 NUM_VALID_COMMANDS = sizeof(m_CmdUpdate) / sizeof(CmdUpdate
 static char m_CmdString[MAX_CMD_SIZE];
 static BOOLEAN m_ContinuousPeekOrPokeEnabled = FALSE;
 
+static void ProcessSerialInputChar (char ch);
 static void SendCommandResponse (BOOLEAN validCmdReceived);
 static void ParseValidCommand (void);
 
 void ApplicationService (void)
 {
+    INT_16 debugInChar;
+
+    /* Read serial port to determine if any new characters available */
+    debugInChar = SC_GetChar();
+
+    if (debugInChar != EOF)
+    {
+        ProcessSerialInputChar((char)debugInChar);
+    }
+
     if (!m_ContinuousPeekOrPokeEnabled)
     {
         UINT_16 index;
@@ -90,48 +101,6 @@ void ResetStateMachine (void)
     memset (m_CmdString, 0, sizeof(m_CmdString));
 }
 
-void ProcessSerialInputChar (char ch)
-{
-    SC_PutChar (ch);
-
-    switch (m_SerInState)
-    {
-        case WAIT_FOR_OPEN_BRACE:
-        default:
-            if (ch == '<')
-            {
-                m_SerInState = WAIT_FOR_ENTIRE_CMD;
-            }
-            else
-            {
-                m_CmdIndex = 0;
-                ResetStateMachine ();
-                SendCommandResponse (FALSE);
-            }
-            break;
-
-        case WAIT_FOR_ENTIRE_CMD:
-            if (m_CmdIndex >= MAX_CMD_SIZE)
-            {
-                SendCommandResponse (FALSE);
-                ResetStateMachine ();
-            }
-            else if (ch == '>')
-            {
-                m_CmdString[m_CmdIndex] = '\0';
-                ParseValidCommand ();
-                ResetStateMachine ();
-            }
-            else
-            {
-                m_CmdString[m_CmdIndex] = toupper (ch);
-                m_CmdIndex++;
-            }
-            break;
-
-    }
-
-}
 
 void SendTestPassed (const char *str, UINT_32 expectedValue, eDataWidth dataWidth)
 {
@@ -186,6 +155,50 @@ void SendMismatchError (const char *str, UINT_32 expectedValue, UINT_32 actualVa
 
     SC_Puts (response);
 }
+
+static void ProcessSerialInputChar (char ch)
+{
+    SC_PutChar (ch);
+
+    switch (m_SerInState)
+    {
+        case WAIT_FOR_OPEN_BRACE:
+        default:
+            if (ch == '<')
+            {
+                m_SerInState = WAIT_FOR_ENTIRE_CMD;
+            }
+            else
+            {
+                m_CmdIndex = 0;
+                ResetStateMachine ();
+                SendCommandResponse (FALSE);
+            }
+            break;
+
+        case WAIT_FOR_ENTIRE_CMD:
+            if (m_CmdIndex >= MAX_CMD_SIZE)
+            {
+                SendCommandResponse (FALSE);
+                ResetStateMachine ();
+            }
+            else if (ch == '>')
+            {
+                m_CmdString[m_CmdIndex] = '\0';
+                ParseValidCommand ();
+                ResetStateMachine ();
+            }
+            else
+            {
+                m_CmdString[m_CmdIndex] = toupper (ch);
+                m_CmdIndex++;
+            }
+            break;
+
+    }
+
+}
+
 
 static void SendCommandResponse (BOOLEAN validCmdReceived)
 {
