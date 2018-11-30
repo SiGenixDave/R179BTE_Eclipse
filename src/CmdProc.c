@@ -12,6 +12,7 @@
 #include "Ram.h"
 #include "NVRam.h"
 #include "RTC.h"
+#include "PeekPoke.h"
 
 #define MAX_PARAMS          5
 #define MAX_CMD_SIZE        55
@@ -37,6 +38,13 @@ const CmdUpdate m_CmdUpdate[] =
 	  { "RAM", RamTableUpdate, RamService },
 	  { "NVR", NVRamTableUpdate, NVRamService },
 	  { "RTC", RTCTableUpdate, RTCService },
+      { "PES", PeekSingle, PeekSingleService },
+      { "POS", PokeSingle, PokeSingleService },
+//      { "PEC", PeekContinuous, NULL},
+//      { "PEC", PokeContinuous, NULL},
+//      { "PEK", PeekKill, NULL},
+//      { "PEK", PokeKill, NULL},
+
 };
 
 SerialInputState m_SerInState;
@@ -129,6 +137,22 @@ void SendMismatchError(const char *str, UINT_32 expectedValue, UINT_32 actualVal
     strcat(response, ">");
 
 	SC_PutsAlways(response);
+}
+
+void SendAddressDataResponse (const char *str, UINT_32 address, UINT_32 data, eDataWidth dataWidth)
+{
+    char response[50];
+
+    strcpy(response,"<");
+    strcat(response, str);
+    strcat(response, ",");
+    strcat(response, GetDataString(address, BIT_WIDTH_24));
+    strcat(response, ",");
+    strcat(response, GetDataString(data, dataWidth));
+    strcat(response, ">");
+
+    SC_PutsAlways(response);
+
 }
 
 static void ProcessSerialInputChar(char ch)
@@ -256,12 +280,11 @@ static void ParseValidCommand(void)
 static char *GetDataString(UINT_32 data, eDataWidth dataWidth)
 {
     static char value[10];
+    UINT_16 i;
+    UINT_16 shift;
 
     /* Clear all of memory so that string will be NULL terminated */
     memset (value, 0, sizeof (value));
-
-    UINT_16 i;
-    UINT_16 shift;
 
     switch (dataWidth)
     {
@@ -271,6 +294,10 @@ static char *GetDataString(UINT_32 data, eDataWidth dataWidth)
 
         case BIT_WIDTH_16:
             shift = 16;
+            break;
+
+        case BIT_WIDTH_24:
+            shift = 24;
             break;
 
         case BIT_WIDTH_32:

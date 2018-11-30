@@ -12,7 +12,7 @@
 
 typedef enum
 {
-    BIT_WIDTH_8, BIT_WIDTH_16, BIT_WIDTH_32
+    BIT_WIDTH_8, BIT_WIDTH_16, BIT_WIDTH_24, BIT_WIDTH_32
 } eDataWidth;
 
 void ApplicationService (void);
