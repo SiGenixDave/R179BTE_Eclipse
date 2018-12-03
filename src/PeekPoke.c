@@ -260,6 +260,19 @@ BOOLEAN PokeContinuous (char cmdPtr[][MAX_PARAM_LENGTH])
     return (valid);
 }
 
+BOOLEAN PeekContinuousKill (char cmdPtr[][MAX_PARAM_LENGTH])
+{
+    m_ContinuousPeek = FALSE;
+    return (TRUE);
+}
+
+BOOLEAN PokeContinuousKill (char cmdPtr[][MAX_PARAM_LENGTH])
+{
+    m_ContinuousPoke = FALSE;
+    return (TRUE);
+}
+
+
 
 static BOOLEAN ValidAddressCheck (UINT_32 address, eAction action)
 {

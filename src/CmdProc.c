@@ -43,10 +43,9 @@ const CmdUpdate m_CmdUpdate[] =
           { "PES", PeekSingle, PeekSingleService },
           { "POS", PokeSingle, PokeSingleService },
           { "PEC", PeekContinuous, PeekContinuousService },
-          { "PEC", PokeContinuous, PokeContinuousService },
-//      { "PEK", PeekKill, NULL},
-//      { "PEK", PokeKill, NULL},
-
+          { "POC", PokeContinuous, PokeContinuousService },
+          { "PEK", PeekContinuousKill, NULL },
+          { "POK", PokeContinuousKill, NULL },
     };
 
 SerialInputState m_SerInState;
