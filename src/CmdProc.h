@@ -17,7 +17,8 @@ typedef enum
 
 void ApplicationService (void);
 void ResetStateMachine (void);
-BOOLEAN HexStringToValue (char *ptr, UINT_32 *data);
+BOOLEAN HexStringToValue (char *ptr, UINT_32 *value);
+void SendAddressDataResponse (const char *str, UINT_32 address, UINT_32 data, eDataWidth dataWidth);
 void SendTestPassed (const char *str, UINT_32 expectedValue, eDataWidth dataWidth);
 void SendMismatchError (const char *str, UINT_32 expectedValue, UINT_32 actualValue, eDataWidth dataWidth);
 

@@ -28,7 +28,7 @@ void SC_Init()
     char rs232mode[] = { '8', 'N', '1', 0 };
 
     if (RS232_OpenComport(COM_ID, 19200, rs232mode)) {
-        printf("Can not open comport\n");
+        printf("Can not open COM port\n");
     }
 }
 

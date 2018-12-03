@@ -12,5 +12,8 @@ void PeekSingleService(const char *str);
 BOOLEAN PeekSingle (char cmdPtr[][MAX_PARAM_LENGTH]);
 void PokeSingleService(const char *str);
 BOOLEAN PokeSingle (char cmdPtr[][MAX_PARAM_LENGTH]);
-
+void PeekContinuousService(const char *str);
+BOOLEAN PeekContinuous (char cmdPtr[][MAX_PARAM_LENGTH]);
+void PokeContinuousService(const char *str);
+BOOLEAN PokeContinuous (char cmdPtr[][MAX_PARAM_LENGTH]);
 #endif /* PEEKPOKE_H_ */

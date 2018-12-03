@@ -35,6 +35,8 @@ static UINT_32 m_Address;
 static UINT_32 m_Data;
 static eDataWidth m_DataType;
 
+static UINT_32 debugVar;
+
 
 void PeekSingleService(const char *str)
 {
@@ -79,7 +81,11 @@ BOOLEAN PeekSingle (char cmdPtr[][MAX_PARAM_LENGTH])
     /* Check for valid address and data */
     if (valid)
     {
+#ifdef WIN32
+        m_Address = (UINT_32)&debugVar;
+#else
         m_Address = address;
+#endif
         m_SinglePeek = TRUE;
     }
 
@@ -128,15 +134,16 @@ BOOLEAN PeekContinuous (char cmdPtr[][MAX_PARAM_LENGTH])
     /* Check for valid address and data */
     if (valid)
     {
+#ifdef WIN32
+        m_Address = (UINT_32)&debugVar;
+#else
         m_Address = address;
+#endif
         m_ContinuousPeek = TRUE;
     }
 
     return (valid);
 }
-
-
-
 
 
 void PokeSingleService(const char *str)
@@ -169,7 +176,7 @@ BOOLEAN PokeSingle (char cmdPtr[][MAX_PARAM_LENGTH])
 {
     BOOLEAN valid = FALSE;
     UINT_32 address;
-    UINT_16 data;
+    UINT_32 data;
 
     if (!HexStringToValue(cmdPtr[1], &address))
     {
@@ -184,7 +191,11 @@ BOOLEAN PokeSingle (char cmdPtr[][MAX_PARAM_LENGTH])
     /* Check for valid address and data */
     if (valid)
     {
+#ifdef WIN32
+        m_Address = (UINT_32)&debugVar;
+#else
         m_Address = address;
+#endif
         m_Data = data;
         m_SinglePoke = TRUE;
     }
@@ -193,6 +204,61 @@ BOOLEAN PokeSingle (char cmdPtr[][MAX_PARAM_LENGTH])
 }
 
 
+void PokeContinuousService(const char *str)
+{
+    if (m_ContinuousPoke)
+    {
+        switch (m_DataType)
+        {
+            case BIT_WIDTH_8:
+                *((UINT_8 *)m_Address) = (UINT_8)m_Data;
+                SendAddressDataResponse(str, m_Address, (UINT_8)m_Data, BIT_WIDTH_8);
+                break;
+            case BIT_WIDTH_16:
+                *((UINT_16 *)m_Address) = (UINT_16)m_Data;
+                SendAddressDataResponse(str, m_Address, (UINT_16)m_Data, BIT_WIDTH_16);
+                break;
+            case BIT_WIDTH_32:
+                *((UINT_32 *)m_Address) = (UINT_32)m_Data;
+                SendAddressDataResponse(str, m_Address, (UINT_32)m_Data, BIT_WIDTH_32);
+                break;
+            default:
+                break;
+        }
+
+    }
+}
+
+BOOLEAN PokeContinuous (char cmdPtr[][MAX_PARAM_LENGTH])
+{
+    BOOLEAN valid = FALSE;
+    UINT_32 address;
+    UINT_32 data;
+
+    if (!HexStringToValue(cmdPtr[1], &address))
+    {
+        return (FALSE);
+    }
+    if (!HexStringToValue(cmdPtr[2], &data))
+    {
+        return (FALSE);
+    }
+
+    valid = ValidAddressCheck (address, POKE);
+    /* Check for valid address and data */
+    if (valid)
+    {
+#ifdef WIN32
+        m_Address = (UINT_32)&debugVar;
+#else
+        m_Address = address;
+#endif
+        m_Data = data;
+        m_ContinuousPoke = TRUE;
+    }
+
+    return (valid);
+}
 
 
 static BOOLEAN ValidAddressCheck (UINT_32 address, eAction action)
