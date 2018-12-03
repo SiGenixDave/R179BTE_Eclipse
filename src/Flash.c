@@ -1,12 +1,28 @@
-/*
- * Flash.c
- *
- *  Created on: Nov 21, 2018
- *      Author: David Smail
- */
+/******************************************************************************
+*
+* Copyright (C) 2018-19 Bombardier
+*
+* File Name: Flash.c
+*
+* Revision History:
+*   12/03/2018 - das - Created
+*
+******************************************************************************/
+
 #include "Types.h"
 #include "CmdProc.h"
 
+/*--------------------------------------------------------------------------
+                           MODULE CONSTANTS
+--------------------------------------------------------------------------*/
+
+/*--------------------------------------------------------------------------
+                             MODULE MACROS
+--------------------------------------------------------------------------*/
+
+/*--------------------------------------------------------------------------
+                          MODULE DATA TYPES
+--------------------------------------------------------------------------*/
 typedef struct
 {
     const UINT_16 addrOffset;
@@ -14,6 +30,14 @@ typedef struct
     BOOLEAN enable;
 } UpdateTable;
 
+/*--------------------------------------------------------------------------
+                            MODULE VARIABLES
+--------------------------------------------------------------------------*/
+
+/* The "data" attribute of this table is stored in FLASH memory starting at
+ * address 0x100000. This table is inserted with a post-processed appliaction
+ * in the makefile called R179BTEInsertFlashBlock.exe
+ */
 static UpdateTable m_Table[] =
     {
         { 0x00, 0x0000, FALSE },
@@ -53,6 +77,24 @@ static UpdateTable m_Table[] =
 
 static const UINT_16 TABLE_SIZE = sizeof(m_Table) / sizeof(UpdateTable);
 
+/*--------------------------------------------------------------------------
+                            MODULE PROTOTYPES
+--------------------------------------------------------------------------*/
+
+/***************************************************************************
+ *
+ * Description: Determines if any FLASH reads are enabled and if so, reads
+ *              the specified address based on the table. It then compares
+ *              the actual value read with the expected value. If the
+ *              values agree, then a PASS is sent back to the user; otherwise
+ *              a FAIL is sent back with expected and actual values reported
+ *
+ *
+ * Parameters:  str - command string
+ *
+ * Returns:     None
+ *
+***************************************************************************/
 void FlashService (const char *str)
 {
 #ifdef _WIN32
@@ -72,10 +114,14 @@ void FlashService (const char *str)
     {
         if (m_Table[index].enable)
         {
+            /* Disable the test (i.e. 1 shot it) */
             m_Table[index].enable = FALSE;
+
+            /* Read the value from the desired location in FLASH */
             actualValue = baseAddress[m_Table[index].addrOffset];
             expectedValue = m_Table[index].data;
 
+            /* Compare and indicate a pass or fail to the user */
             if (actualValue != expectedValue)
             {
                 SendMismatchError (str, expectedValue, actualValue, BIT_WIDTH_16);
@@ -88,6 +134,18 @@ void FlashService (const char *str)
     }
 }
 
+/***************************************************************************
+ *
+ * Description: Gets the desired offset into the table from the user
+ *              and sets the enable flag. FF (255) as offset indicates
+ *              that the user wants to make all flags in the table TRUE
+ *
+ *
+ * Parameters:  cmdPtr - array with the command and parameters
+ *
+ * Returns:     BOOLEAN - TRUE if tableIndex is valid; FALSE otherwise
+ *
+***************************************************************************/
 BOOLEAN FlashTableUpdate (char cmdPtr[][MAX_PARAM_LENGTH])
 {
     BOOLEAN valid = FALSE;
@@ -98,6 +156,7 @@ BOOLEAN FlashTableUpdate (char cmdPtr[][MAX_PARAM_LENGTH])
         return (FALSE);
     }
 
+    /* Set all enable flags to TRUE */
     if (tableIndex == 0x00FF)
     {
         UINT_16 index;
@@ -107,6 +166,7 @@ BOOLEAN FlashTableUpdate (char cmdPtr[][MAX_PARAM_LENGTH])
         }
         valid = TRUE;
     }
+    /* Set only 1 flag if tableIndex is in range */
     else if (tableIndex < TABLE_SIZE)
     {
         m_Table[tableIndex].enable = TRUE;

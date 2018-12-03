@@ -28,8 +28,9 @@ static BOOLEAN m_SinglePeek = FALSE;
 static BOOLEAN m_SinglePoke = FALSE;
 static BOOLEAN m_ContinuousPeek = FALSE;
 static BOOLEAN m_ContinuousPoke = FALSE;
-static UINT_32 m_Address;
-static UINT_32 m_Data;
+static UINT_32 m_PeekAddress;
+static UINT_32 m_PokeAddress;
+static UINT_32 m_PokeData;
 static eDataWidth m_DataType;
 
 static UINT_32 debugVar;
@@ -45,16 +46,16 @@ void PeekSingleService (const char *str)
         switch (m_DataType)
         {
             case BIT_WIDTH_8:
-                data_8 = *((UINT_8 *) m_Address);
-                SendAddressDataResponse (str, m_Address, data_8, BIT_WIDTH_8);
+                data_8 = *((UINT_8 *) m_PeekAddress);
+                SendAddressDataResponse (str, m_PeekAddress, data_8, BIT_WIDTH_8);
                 break;
             case BIT_WIDTH_16:
-                data_16 = *((UINT_16 *) m_Address);
-                SendAddressDataResponse (str, m_Address, data_16, BIT_WIDTH_16);
+                data_16 = *((UINT_16 *) m_PeekAddress);
+                SendAddressDataResponse (str, m_PeekAddress, data_16, BIT_WIDTH_16);
                 break;
             case BIT_WIDTH_32:
-                data_32 = *((UINT_32 *) m_Address);
-                SendAddressDataResponse (str, m_Address, data_32, BIT_WIDTH_32);
+                data_32 = *((UINT_32 *) m_PeekAddress);
+                SendAddressDataResponse (str, m_PeekAddress, data_32, BIT_WIDTH_32);
                 break;
             default:
                 break;
@@ -78,9 +79,9 @@ BOOLEAN PeekSingle (char cmdPtr[][MAX_PARAM_LENGTH])
     if (valid)
     {
 #ifdef WIN32
-        m_Address = (UINT_32) &debugVar;
+        m_PeekAddress = (UINT_32) &debugVar;
 #else
-        m_Address = address;
+        m_PeekAddress = address;
 #endif
         m_SinglePeek = TRUE;
     }
@@ -98,16 +99,16 @@ void PeekContinuousService (const char *str)
         switch (m_DataType)
         {
             case BIT_WIDTH_8:
-                data_8 = *((UINT_8 *) m_Address);
-                SendAddressDataResponse (str, m_Address, data_8, BIT_WIDTH_8);
+                data_8 = *((UINT_8 *) m_PeekAddress);
+                SendAddressDataResponse (str, m_PeekAddress, data_8, BIT_WIDTH_8);
                 break;
             case BIT_WIDTH_16:
-                data_16 = *((UINT_16 *) m_Address);
-                SendAddressDataResponse (str, m_Address, data_16, BIT_WIDTH_16);
+                data_16 = *((UINT_16 *) m_PeekAddress);
+                SendAddressDataResponse (str, m_PeekAddress, data_16, BIT_WIDTH_16);
                 break;
             case BIT_WIDTH_32:
-                data_32 = *((UINT_32 *) m_Address);
-                SendAddressDataResponse (str, m_Address, data_32, BIT_WIDTH_32);
+                data_32 = *((UINT_32 *) m_PeekAddress);
+                SendAddressDataResponse (str, m_PeekAddress, data_32, BIT_WIDTH_32);
                 break;
             default:
                 break;
@@ -131,9 +132,9 @@ BOOLEAN PeekContinuous (char cmdPtr[][MAX_PARAM_LENGTH])
     if (valid)
     {
 #ifdef WIN32
-        m_Address = (UINT_32) &debugVar;
+        m_PeekAddress = (UINT_32) &debugVar;
 #else
-        m_Address = address;
+        m_PeekAddress = address;
 #endif
         m_ContinuousPeek = TRUE;
     }
@@ -149,16 +150,16 @@ void PokeSingleService (const char *str)
         switch (m_DataType)
         {
             case BIT_WIDTH_8:
-                *((UINT_8 *) m_Address) = (UINT_8) m_Data;
-                SendAddressDataResponse (str, m_Address, m_Data, BIT_WIDTH_8);
+                *((UINT_8 *) m_PokeAddress) = (UINT_8) m_PokeData;
+                SendAddressDataResponse (str, m_PokeAddress, m_PokeData, BIT_WIDTH_8);
                 break;
             case BIT_WIDTH_16:
-                *((UINT_16 *) m_Address) = (UINT_16) m_Data;
-                SendAddressDataResponse (str, m_Address, m_Data, BIT_WIDTH_16);
+                *((UINT_16 *) m_PokeAddress) = (UINT_16) m_PokeData;
+                SendAddressDataResponse (str, m_PokeAddress, m_PokeData, BIT_WIDTH_16);
                 break;
             case BIT_WIDTH_32:
-                *((UINT_32 *) m_Address) = (UINT_32) m_Data;
-                SendAddressDataResponse (str, m_Address, m_Data, BIT_WIDTH_32);
+                *((UINT_32 *) m_PokeAddress) = (UINT_32) m_PokeData;
+                SendAddressDataResponse (str, m_PokeAddress, m_PokeData, BIT_WIDTH_32);
                 break;
             default:
                 break;
@@ -187,11 +188,11 @@ BOOLEAN PokeSingle (char cmdPtr[][MAX_PARAM_LENGTH])
     if (valid)
     {
 #ifdef WIN32
-        m_Address = (UINT_32) &debugVar;
+        m_PokeAddress = (UINT_32) &debugVar;
 #else
-        m_Address = address;
+        m_PokeAddress = address;
 #endif
-        m_Data = data;
+        m_PokeData = data;
         m_SinglePoke = TRUE;
     }
 
@@ -205,16 +206,16 @@ void PokeContinuousService (const char *str)
         switch (m_DataType)
         {
             case BIT_WIDTH_8:
-                *((UINT_8 *) m_Address) = (UINT_8) m_Data;
-                SendAddressDataResponse (str, m_Address, (UINT_8) m_Data, BIT_WIDTH_8);
+                *((UINT_8 *) m_PokeAddress) = (UINT_8) m_PokeData;
+                SendAddressDataResponse (str, m_PokeAddress, (UINT_8) m_PokeData, BIT_WIDTH_8);
                 break;
             case BIT_WIDTH_16:
-                *((UINT_16 *) m_Address) = (UINT_16) m_Data;
-                SendAddressDataResponse (str, m_Address, (UINT_16) m_Data, BIT_WIDTH_16);
+                *((UINT_16 *) m_PokeAddress) = (UINT_16) m_PokeData;
+                SendAddressDataResponse (str, m_PokeAddress, (UINT_16) m_PokeData, BIT_WIDTH_16);
                 break;
             case BIT_WIDTH_32:
-                *((UINT_32 *) m_Address) = (UINT_32) m_Data;
-                SendAddressDataResponse (str, m_Address, (UINT_32) m_Data, BIT_WIDTH_32);
+                *((UINT_32 *) m_PokeAddress) = (UINT_32) m_PokeData;
+                SendAddressDataResponse (str, m_PokeAddress, (UINT_32) m_PokeData, BIT_WIDTH_32);
                 break;
             default:
                 break;
@@ -243,11 +244,11 @@ BOOLEAN PokeContinuous (char cmdPtr[][MAX_PARAM_LENGTH])
     if (valid)
     {
 #ifdef WIN32
-        m_Address = (UINT_32) &debugVar;
+        m_PokeAddress = (UINT_32) &debugVar;
 #else
-        m_Address = address;
+        m_PokeAddress = address;
 #endif
-        m_Data = data;
+        m_PokeData = data;
         m_ContinuousPoke = TRUE;
     }
 
