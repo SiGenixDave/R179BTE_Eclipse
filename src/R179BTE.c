@@ -17,12 +17,12 @@
 #include "Flash.h"
 #include "SerComm.h"
 
-static char *GetDataString(UINT_32 data, eDataWidth dataWidth)
+static char *GetDataString (UINT_32 data, eDataWidth dataWidth)
 {
     static char value[10];
 
     /* Clear all of memory so that string will be NULL terminated */
-    memset (value, 0, sizeof (value));
+    memset (value, 0, sizeof(value));
 
     UINT_16 i;
     UINT_16 shift;
@@ -78,15 +78,14 @@ int main (void)
     /**********************************/
 #endif
 
-    printf("%s\n", GetDataString(0x12345678, BIT_WIDTH_8));
-    printf("%s\n", GetDataString(0x12345678, BIT_WIDTH_16));
-    printf("%s\n", GetDataString(0x12345678, BIT_WIDTH_32));
-    printf("%s\n", GetDataString(0xABCDEF11, BIT_WIDTH_8));
-    printf("%s\n", GetDataString(0xABCDEF11, BIT_WIDTH_16));
-    printf("%s\n", GetDataString(0xABCDEF11, BIT_WIDTH_32));
+    printf ("%s\n", GetDataString (0x12345678, BIT_WIDTH_8));
+    printf ("%s\n", GetDataString (0x12345678, BIT_WIDTH_16));
+    printf ("%s\n", GetDataString (0x12345678, BIT_WIDTH_32));
+    printf ("%s\n", GetDataString (0xABCDEF11, BIT_WIDTH_8));
+    printf ("%s\n", GetDataString (0xABCDEF11, BIT_WIDTH_16));
+    printf ("%s\n", GetDataString (0xABCDEF11, BIT_WIDTH_32));
 
-
-    SC_Init();
+    SC_Init ();
     ResetStateMachine ();
 
     while (TRUE)

@@ -45,8 +45,7 @@ const CmdUpdate m_CmdUpdate[] =
           { "PEC", PeekContinuous, PeekContinuousService },
           { "POC", PokeContinuous, PokeContinuousService },
           { "PEK", PeekContinuousKill, NULL },
-          { "POK", PokeContinuousKill, NULL },
-    };
+          { "POK", PokeContinuousKill, NULL }, };
 
 SerialInputState m_SerInState;
 UINT_16 m_CmdIndex;
@@ -220,7 +219,7 @@ static void ParseValidCommand (void)
             cmd++;
             if (cmd >= MAX_PARAMS)
             {
-                /* TODO Issue invalid command; too many params */
+                SendInvalidCommandResponse ();
                 return;
             }
         }
@@ -228,7 +227,7 @@ static void ParseValidCommand (void)
         {
             if (cmdIndex >= MAX_PARAM_LENGTH)
             {
-                /* TODO Issue invalid command; param length too long */
+                SendInvalidCommandResponse ();
                 return;
             }
             else

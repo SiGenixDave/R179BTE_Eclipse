@@ -10,6 +10,6 @@
 
 BOOLEAN VersionUpdate (char cmdPtr[][MAX_PARAM_LENGTH])
 {
-   SC_PutsAlways("<VER,1.0>");
-   return (TRUE);
+    SC_PutsAlways ("<VER,1.0>");
+    return (TRUE);
 }
