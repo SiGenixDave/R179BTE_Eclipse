@@ -1,17 +1,17 @@
 /******************************************************************************
-*
-* Copyright (C) 2018-19 Bombardier
-*
-* File Name: CmdProc.c
-*
-* Revision History:
-*   12/03/2018 - das - Created
-*
-******************************************************************************/
+ *
+ * Copyright (C) 2018-19 Bombardier
+ *
+ * File Name: CmdProc.c
+ *
+ * Revision History:
+ *   12/03/2018 - das - Created
+ *
+ ******************************************************************************/
 
 /*--------------------------------------------------------------------------
-                              INCLUDE FILES
-  --------------------------------------------------------------------------*/
+ INCLUDE FILES
+ --------------------------------------------------------------------------*/
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -30,51 +30,42 @@
 #include "PeekPoke.h"
 
 /*--------------------------------------------------------------------------
-                           MODULE CONSTANTS
---------------------------------------------------------------------------*/
+ MODULE CONSTANTS
+ --------------------------------------------------------------------------*/
 #define MAX_PARAMS          5
 #define MAX_CMD_SIZE        55
 
+/*--------------------------------------------------------------------------
+ MODULE MACROS
+ --------------------------------------------------------------------------*/
 
 /*--------------------------------------------------------------------------
-                             MODULE MACROS
---------------------------------------------------------------------------*/
-
-/*--------------------------------------------------------------------------
-                          MODULE DATA TYPES
---------------------------------------------------------------------------*/
+ MODULE DATA TYPES
+ --------------------------------------------------------------------------*/
 typedef enum
 {
     WAIT_FOR_OPEN_BRACE, WAIT_FOR_ENTIRE_CMD
 } SerialInputState;
-
 
 typedef BOOLEAN (*CmdUpdateFnPtr) (char cmdPtr[][MAX_PARAM_LENGTH]);
 typedef void (*ServiceFnPtr) (const char *str);
 
 typedef struct
 {
-    const char *str;    /* Command from User */
-    const CmdUpdateFnPtr cmdUpdateFnPtr;  /* Function called after command received */
-    const ServiceFnPtr serviceFnPtr;      /* Function called always to support commands */
+    const char *str; /* Command from User */
+    const CmdUpdateFnPtr cmdUpdateFnPtr; /* Function called after command received */
+    const ServiceFnPtr serviceFnPtr; /* Function called always to support commands */
 } CmdUpdate;
 
 /*--------------------------------------------------------------------------
-                            MODULE VARIABLES
---------------------------------------------------------------------------*/
-const CmdUpdate m_CmdUpdate[] =
-    {
-        { "VER", VersionUpdate, NULL },
-          { "FLA", FlashTableUpdate, FlashService },
-          { "RAM", RamTableUpdate, RamService },
-          { "NVR", NVRamTableUpdate, NVRamService },
-          { "RTC", RTCTableUpdate, RTCService },
-          { "PES", PeekSingle, PeekSingleService },
-          { "POS", PokeSingle, PokeSingleService },
-          { "PEC", PeekContinuous, PeekContinuousService },
-          { "POC", PokeContinuous, PokeContinuousService },
-          { "PEK", PeekContinuousKill, NULL },
-          { "POK", PokeContinuousKill, NULL }, };
+ MODULE VARIABLES
+ --------------------------------------------------------------------------*/
+const CmdUpdate m_CmdUpdate[] = {
+    { "VER", VersionUpdate, NULL }, { "FLA", FlashTableUpdate, FlashService }, { "RAM", RamTableUpdate, RamService }, {
+        "NVR", NVRamTableUpdate, NVRamService }, { "RTC", RTCTableUpdate, RTCService }, {
+        "PES", PeekSingle, PeekSingleService }, { "POS", PokeSingle, PokeSingleService }, {
+        "PEC", PeekContinuous, PeekContinuousService }, { "POC", PokeContinuous, PokeContinuousService }, {
+        "PEK", PeekContinuousKill, NULL }, { "POK", PokeContinuousKill, NULL }, };
 
 SerialInputState m_SerialParsingtate;
 UINT_16 m_CmdIndex;
@@ -85,8 +76,8 @@ static const UINT_16 NUM_VALID_COMMANDS = sizeof(m_CmdUpdate) / sizeof(CmdUpdate
 static char m_CmdString[MAX_CMD_SIZE];
 
 /*--------------------------------------------------------------------------
-                            MODULE PROTOTYPES
---------------------------------------------------------------------------*/
+ MODULE PROTOTYPES
+ --------------------------------------------------------------------------*/
 static void ProcessSerialInputChar (char ch);
 static void SendInvalidCommandResponse (void);
 static void ParseValidCommand (void);
@@ -104,7 +95,7 @@ static char *GetDataString (UINT_32 data, eDataWidth dataWidth);
  *
  * Returns:     None
  *
-***************************************************************************/
+ ***************************************************************************/
 void ApplicationService (void)
 {
     UINT_16 index;
@@ -140,7 +131,7 @@ void ApplicationService (void)
  *
  * Returns:     BOOLEAN - TRUE if conversion successful; FALSE otherwise
  *
-***************************************************************************/
+ ***************************************************************************/
 BOOLEAN HexStringToValue (char *ptr, UINT_32 *value)
 {
 
@@ -171,14 +162,13 @@ BOOLEAN HexStringToValue (char *ptr, UINT_32 *value)
  *
  * Returns:     None
  *
-***************************************************************************/
+ ***************************************************************************/
 void ResetStateMachine (void)
 {
     m_SerialParsingtate = WAIT_FOR_OPEN_BRACE;
     m_CmdIndex = 0;
     memset (m_CmdString, 0, sizeof(m_CmdString));
 }
-
 
 /***************************************************************************
  *
@@ -195,7 +185,7 @@ void ResetStateMachine (void)
  *
  * Returns:     None
  *
-***************************************************************************/
+ ***************************************************************************/
 void SendTestPassed (const char *str, UINT_32 expectedValue, eDataWidth dataWidth)
 {
     char response[50];
@@ -227,7 +217,7 @@ void SendTestPassed (const char *str, UINT_32 expectedValue, eDataWidth dataWidt
  *
  * Returns:     None
  *
-***************************************************************************/
+ ***************************************************************************/
 void SendMismatchError (const char *str, UINT_32 expectedValue, UINT_32 actualValue, eDataWidth dataWidth)
 {
     char response[50];
@@ -257,7 +247,7 @@ void SendMismatchError (const char *str, UINT_32 expectedValue, UINT_32 actualVa
  *
  * Returns:     None
  *
-***************************************************************************/
+ ***************************************************************************/
 void SendAddressDataResponse (const char *str, UINT_32 address, UINT_32 data, eDataWidth dataWidth)
 {
     char response[50];
@@ -274,7 +264,6 @@ void SendAddressDataResponse (const char *str, UINT_32 address, UINT_32 data, eD
 
 }
 
-
 /***************************************************************************
  *
  * Description: Parses the serial input stream from the user. Verifies,
@@ -289,7 +278,7 @@ void SendAddressDataResponse (const char *str, UINT_32 address, UINT_32 data, eD
  *
  * Returns:     None
  *
-***************************************************************************/
+ ***************************************************************************/
 static void ProcessSerialInputChar (char ch)
 {
     SC_PutChar (ch);
@@ -343,7 +332,7 @@ static void ProcessSerialInputChar (char ch)
  *
  * Returns:     None
  *
-***************************************************************************/
+ ***************************************************************************/
 static void SendInvalidCommandResponse (void)
 {
     SC_Puts ("<INV>");
@@ -360,7 +349,7 @@ static void SendInvalidCommandResponse (void)
  *
  * Returns:     None
  *
-***************************************************************************/
+ ***************************************************************************/
 static void ParseValidCommand (void)
 {
     BOOLEAN valid = FALSE;
@@ -451,7 +440,7 @@ static void ParseValidCommand (void)
  *
  * Returns:     char * - HEX string
  *
-***************************************************************************/
+ ***************************************************************************/
 static char *GetDataString (UINT_32 data, eDataWidth dataWidth)
 {
     static char value[10];

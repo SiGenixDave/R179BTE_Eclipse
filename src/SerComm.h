@@ -8,7 +8,7 @@
 #ifndef SERCOMM_H_
 #define SERCOMM_H_
 
-INT_16 SC_GetChar(void);
+INT_16 SC_GetChar (void);
 void SC_Init (void);
 void SC_PutChar (char c);
 void SC_Puts (char *str);
